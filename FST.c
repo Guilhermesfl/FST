@@ -28,6 +28,7 @@ FSTnode* insert(FSTnode* node,int pfx[], int stride_size, int *pos_pfx, int pfx_
 		{
 			node->entries[pos].next_hop[i] = pfx[i];
 		}
+		*pos_pfx = 0;
 	} else {
 		if(node->entries[pos].child != NULL) insert(node->entries[pos].child,pfx,stride_size,pos_pfx,pfx_size);
 		else{
@@ -55,4 +56,18 @@ int convert_bin(int pfx[], int stride_size, int *pos_pfx, int pfx_size){
 	}
 
 	return pos;
+}
+
+int* search(FSTnode* node,int pfx[], int stride_size, int *pos_pfx, int pfx_size){
+
+	int *found;
+	int pos = convert_bin(pfx,stride_size,pos_pfx,pfx_size);
+	if (*pos_pfx == pfx_size){ //If true, end of pfx
+		if(node->entries[pos].next_hop[0] != -1) return node->entries[pos].next_hop;
+	} else {
+		if(node->entries[pos].next_hop[0] != -1) found = node->entries[pos].next_hop;
+		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx,pfx_size);
+		return found;
+	}
+	
 }

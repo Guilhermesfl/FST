@@ -30,7 +30,8 @@ FSTnode* insert(FSTnode* node,int pfx[], int stride_size, int *pos_pfx, int pfx_
 		}
 		*pos_pfx = 0;
 	} else {
-		if(node->entries[pos].child != NULL) insert(node->entries[pos].child,pfx,stride_size,pos_pfx,pfx_size);
+		if(node->entries[pos].child != NULL) insert(node->entries[pos].child, \
+		pfx,stride_size,pos_pfx,pfx_size);
 		else{
 			node->entries[pos].child = NewNode(stride_size);
 			insert(node->entries[pos].child,pfx,stride_size,pos_pfx,pfx_size);
@@ -70,4 +71,32 @@ int* search(FSTnode* node,int pfx[], int stride_size, int *pos_pfx, int pfx_size
 		return found;
 	}
 	
+}
+
+void read_prefixes(FILE *pfx){
+
+	uint8_t a0,b0,c0,d0,a1,b1,c1,d1,len;
+	uint32_t next_hop,pfx_p;
+	fscanf(pfx,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+			&a0, &b0, &c0, &d0);
+	fscanf(pfx,"/%"SCNu8, &len);
+	len = 32;
+	fscanf(pfx,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+			&a1, &b1, &c1, &d1);
+	new_ipv4_prefix(a0,b0,c0,d0);
+}
+
+void new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
+
+	int pfx[8];
+	int base;
+	base = 128;
+	a = c;
+
+	for(int i = 0; i < 8; i++){
+		pfx[i] = a/base;
+		if(pfx[i] != 0) a-= base;
+		base /= 2;
+	}
+
 }

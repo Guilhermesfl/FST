@@ -5,7 +5,7 @@
 int main(int argc, char const *argv[])
 {
 	FSTnode *head_node;
-	int stride_size,pos_pfx=31,*LMP, i=0;
+	int stride_size,*LMP, i=0;
 	FILE *pfx;
 	stride_size = 8;
 

@@ -76,10 +76,11 @@ int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	int *found;
 	int pos = bintodec(pfx,stride_size,pos_pfx);
-	if (*pos_pfx == pfx->netmask){ //If true, end of pfx
-		if(node->entries[pos].pfx[0] != -1) return node->entries[pos].pfx;
+	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
+		if(node->entries[pos].pfx[31] != -1) return node->entries[pos].pfx;
+		else return NULL;
 	} else {
-		if(node->entries[pos].pfx[0] != -1) found = node->entries[pos].pfx;
+		if(node->entries[pos].pfx[31] != -1) found = node->entries[pos].pfx;
 		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx);
 		return found;
 	}

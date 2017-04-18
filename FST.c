@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include "FST.h"
 #include <string.h>
-
+/*
+*Function responsible for allocatin the FST node
+*according to the stride_size
+*/
 FSTnode* NewNode(int stride_size){
 
 	int n_entries = 2;
@@ -19,17 +22,20 @@ FSTnode* NewNode(int stride_size){
 
 	return x; 
 }
-
+/*
+*Function responsible for inserting the prefix and the next_hop
+*in the FST
+*/
 FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 	
-	int pos = convert_bin(pfx,stride_size,pos_pfx);
+	int pos = bintodec(pfx,stride_size,pos_pfx);//Position in which the pfx will be inserted
 	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
 		for (int i = 31; i > 31- pfx->netmask; --i)
 		{
 			node->entries[pos].pfx[i] = pfx->pfx[i];
 		}
 		node->entries[pos].next_hop = pfx->next_hop;
-		*pos_pfx = 31;
+		*pos_pfx = 31; //Resets the position
 	} else {
 		if(node->entries[pos].child != NULL) insert(node->entries[pos].child, \
 		pfx,stride_size,pos_pfx);
@@ -41,8 +47,11 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 
 	return node;
 }
-
-int convert_bin(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
+/*
+*Function responsible for, given the stride_size, return the 
+*correct position in the node entry
+*/
+int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	int pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx;
 	for (int i = *pos_pfx; i > (aux2-stride_size); i--)
@@ -59,11 +68,14 @@ int convert_bin(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	return pos;
 }
-
+/*
+*Function responsible for, given the prefix, return the 
+*LMP
+*/
 int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	int *found;
-	int pos = convert_bin(pfx,stride_size,pos_pfx);
+	int pos = bintodec(pfx,stride_size,pos_pfx);
 	if (*pos_pfx == pfx->netmask){ //If true, end of pfx
 		if(node->entries[pos].pfx[0] != -1) return node->entries[pos].pfx;
 	} else {
@@ -73,7 +85,9 @@ int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 	}
 	
 }
-
+/*
+*Function responsible for reading the prefixes file and the next_hop
+*/
 void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 
 	uint8_t a0,b0,c0,d0,a1,b1,c1,d1,len;
@@ -94,7 +108,10 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 	head_node = insert(head_node,entry,stride_size,&pos_pfx);
 
 }
-
+/*
+*Function responsible for reading the prefixes in decimal base
+*and converting it to binary
+*/
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 
 	int pos = 31;
@@ -116,6 +133,9 @@ ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 	
 	return prefix;
 }
+/*
+*Function responsible for return the next_hop 
+*/
 uint32_t new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
 {
      return a << 24 | b << 16 | c << 8 | d;

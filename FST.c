@@ -3,10 +3,8 @@
 #include "FST.h"
 #include <string.h>
 #include <assert.h>
-
 /*
-*Function responsible for allocatin the FST node
-*according to the stride_size
+*Function responsible for allocatin the FST node according to the stride_size
 */
 FSTnode* NewNode(int stride_size){
 
@@ -25,8 +23,7 @@ FSTnode* NewNode(int stride_size){
 	return x; 
 }
 /*
-*Function responsible for inserting the prefix and the next_hop
-*in the FST
+*Function responsible for inserting the prefix and the next_hop in the FST
 */
 FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 	
@@ -50,8 +47,7 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 	return node;
 }
 /*
-*Function responsible for, given the stride_size, return the 
-*correct position in the node entry
+*Function responsible for, given the stride_size, return the correct position in the node entry
 */
 int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
@@ -71,21 +67,53 @@ int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 	return pos;
 }
 /*
-*Function responsible for, given the prefix, return the 
-*LMP
+*Function responsible for reading and searching the addrs file 
 */
-int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx){
+void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 
-	int *found;
+	assert(addrs_file != NULL);
+
+	uint8_t a0,b0,c0,d0;
+	int pos_pfx, *LMP = NULL, i, *found = NULL;
+
+	while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+			&a0, &b0, &c0, &d0) == 4){
+		pos_pfx = 31;
+		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
+		entry->netmask = 31;
+		
+		LMP = search(head_node,entry,stride_size,&pos_pfx, found);
+	
+		printf("Prefix = ");
+		for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
+		printf("\n");
+		if(LMP == NULL) {
+			printf("No matching prefixes! Default route :\n");
+			for (int j = 0; j < 32; ++j) printf("0");
+		}else {
+			printf("LMP = ");
+			while(*(LMP+31) != -1){
+				printf("%d", *(LMP+i));
+				i--;
+			}
+		}
+		printf("\n");
+	}
+}
+/*
+*Function responsible for, given the prefix, return the LMP
+*/
+int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, int* found){
+
 	int pos = bintodec(pfx,stride_size,pos_pfx);
 	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
 		if(node->entries[pos].pfx[31] != -1) return node->entries[pos].pfx;
-		else return NULL;
 	} else {
 		if(node->entries[pos].pfx[31] != -1) found = node->entries[pos].pfx;
-		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx);
+		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx, found);
 		return found;
 	}
+	return found;
 	
 }
 /*
@@ -123,8 +151,7 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 	}
 }
 /*
-*Function responsible for reading the prefixes in decimal base
-*and converting it to binary
+*Function responsible for reading the prefixes in decimal base and converting it to binary
 */
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 

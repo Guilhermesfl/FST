@@ -18,20 +18,20 @@ int main(int argc, char const *argv[])
 	head_node = NewNode(stride_size);
 	read_prefixes(pfx, head_node, stride_size);
 
-	LMP = search(head_node,a1,stride_size,&pos_pfx);
-
-	printf("Prefix = ");
-	for (int j = 31; j > 0; --j) printf("%d", a1->pfx[j]);
-	printf("\n");
-	printf("LMP = ");
-	if(LMP == NULL) for (int j = 0; j < 32; ++j) printf("0");//DefaultRoute
-	else {
-		while(*(LMP+31) != -1){
-			printf("%d", *(LMP+i));
-			i--;
-		}
-	}
-	printf("\n");
+//	LMP = search(head_node,a1,stride_size,&pos_pfx);
+//
+//	printf("Prefix = ");
+//	for (int j = 31; j > 0; --j) printf("%d", a1->pfx[j]);
+//	printf("\n");
+//	printf("LMP = ");
+//	if(LMP == NULL) for (int j = 0; j < 32; ++j) printf("0");//DefaultRoute
+//	else {
+//		while(*(LMP+31) != -1){
+//			printf("%d", *(LMP+i));
+//			i--;
+//		}
+//	}
+//	printf("\n");
 
 
 	fclose(pfx);

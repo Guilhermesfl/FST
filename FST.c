@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "FST.h"
 #include <string.h>
+#include <assert.h>
+
 /*
 *Function responsible for allocatin the FST node
 *according to the stride_size
@@ -91,23 +93,34 @@ int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 */
 void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 
+	assert(pfxs_file != NULL);
+
 	uint8_t a0,b0,c0,d0,a1,b1,c1,d1,len;
 	uint32_t pfx,pfx_p;
 	int pos_pfx;
-	ipv4_pfx *entry;
 
-	fscanf(pfxs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
-			&a0, &b0, &c0, &d0);
-	fscanf(pfxs_file,"/%"SCNu8, &len);
-	fscanf(pfxs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
-			&a1, &b1, &c1, &d1);
-
-	pos_pfx = 31;
-	entry = new_ipv4_prefix(a0,b0,c0,d0);
-	entry->next_hop = new_ipv4_addr(a1, b1, c1, d1);
-	entry->netmask = 24;
-	head_node = insert(head_node,entry,stride_size,&pos_pfx);
-
+	while(fscanf(pfxs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+			&a0, &b0, &c0, &d0) == 4){
+		if(fscanf(pfxs_file,"/%"SCNu8, &len) != 1){
+			len = 0;
+			if(d0> 0) len = 32;
+			else if (c0 > 0) len = 24;
+			else if (b0 > 0) len = 16;
+			else if (a0 > 0) len = 8;
+		}
+		if(fscanf(pfxs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+				&a1, &b1, &c1, &d1) != 4){
+			printf("Couldn't parse network prefix: "
+				"%"PRIu8".%"PRIu8".%"PRIu8".%"PRIu8"/%"PRIu8"\n",
+				a0, b0, c0, d0, len);
+			exit(1);
+		}
+		pos_pfx = 31;
+		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
+		entry->next_hop = new_ipv4_addr(a1, b1, c1, d1);
+		entry->netmask = len;
+		head_node = insert(head_node,entry,stride_size,&pos_pfx);
+	}
 }
 /*
 *Function responsible for reading the prefixes in decimal base

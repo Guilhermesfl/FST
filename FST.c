@@ -3,6 +3,19 @@
 #include "FST.h"
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
+/*
+*Function responsible for print how to run the program 
+*/
+void print_usage(char *argv[]){
+	printf("Usage: %s stride_size <file1> <file2> <file3> ", argv[0]);
+	printf("\n");
+	printf("Options:\n");
+	printf("stride_size - size of prefix in each node\n");
+	printf("<file1> -  prefixes netmask 24/32\n");
+	printf("<file2> -  prefixes netmask 24/32\n");
+	printf("<file3> -  random addresses\n");
+}
 /*
 *Function responsible for allocatin the FST node according to the stride_size
 */
@@ -29,11 +42,8 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 	
 	int pos = bintodec(pfx,stride_size,pos_pfx);//Position in which the pfx will be inserted
 	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
-		for (int i = 31; i > 31- pfx->netmask; --i)
-		{
-			node->entries[pos].pfx[i] = pfx->pfx[i];
-		}
-		node->entries[pos].next_hop = pfx->next_hop;
+		for (int i = 31; i > 31- pfx->netmask; --i) node->entries[pos].pfx[i] = pfx->pfx[i];
+		for (int i = 0; i < 4; ++i) node->entries[pos].next_hop[i] = pfx->next_hop[i];
 		*pos_pfx = 31; //Resets the position
 	} else {
 		if(node->entries[pos].child != NULL) insert(node->entries[pos].child, \
@@ -74,7 +84,8 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	assert(addrs_file != NULL);
 
 	uint8_t a0,b0,c0,d0;
-	int pos_pfx, *LMP = NULL, i, *found = NULL;
+	int pos_pfx, i;
+	entry *LMP = NULL;
 
 	while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 			&a0, &b0, &c0, &d0) == 4){
@@ -82,7 +93,7 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 		entry->netmask = 31;
 		
-		LMP = search(head_node,entry,stride_size,&pos_pfx, found);
+		LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 	
 		printf("Prefix = ");
 		for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
@@ -91,11 +102,15 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			printf("No matching prefixes! Default route :\n");
 			for (int j = 0; j < 32; ++j) printf("0");
 		}else {
+			i = 31;
 			printf("LMP = ");
-			while(*(LMP+31) != -1){
-				printf("%d", *(LMP+i));
+			while(LMP->pfx[i] != -1){
+				printf("%d", LMP->pfx[i]);
 				i--;
 			}
+			printf("\n");
+			printf("Next hop = ");
+			printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
 		}
 		printf("\n");
 	}
@@ -103,13 +118,13 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 /*
 *Function responsible for, given the prefix, return the LMP
 */
-int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, int* found){
+entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry* found){
 
 	int pos = bintodec(pfx,stride_size,pos_pfx);
 	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
-		if(node->entries[pos].pfx[31] != -1) return node->entries[pos].pfx;
+		if(node->entries[pos].pfx[31] != -1) return &node->entries[pos];
 	} else {
-		if(node->entries[pos].pfx[31] != -1) found = node->entries[pos].pfx;
+		if(node->entries[pos].pfx[31] != -1) found = &node->entries[pos];
 		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx, found);
 		return found;
 	}
@@ -145,7 +160,7 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 		}
 		pos_pfx = 31;
 		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
-		entry->next_hop = new_ipv4_addr(a1, b1, c1, d1);
+		entry = new_ipv4_addr(a1, b1, c1, d1, entry);
 		entry->netmask = len;
 		head_node = insert(head_node,entry,stride_size,&pos_pfx);
 	}
@@ -177,7 +192,11 @@ ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 /*
 *Function responsible for return the next_hop 
 */
-uint32_t new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
+ipv4_pfx* new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d, ipv4_pfx *entry)
 {
-     return a << 24 | b << 16 | c << 8 | d;
+		entry->next_hop[0] = a;
+		entry->next_hop[1] = b;
+		entry->next_hop[2] = c;
+		entry->next_hop[3] = d;
+    	return entry; 
 }

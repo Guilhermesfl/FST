@@ -11,22 +11,22 @@ struct fstnode{
 
 struct n_entry{
 	int pfx[32];
-	uint32_t next_hop;
+	int next_hop[4];
 	FSTnode *child;
 };
 
 struct ipv4_prefix {
 	int pfx[32];
-	uint32_t next_hop;
+	int next_hop[4];
 	uint8_t netmask;
 };
 
 FSTnode* NewNode(int stride_size);
 FSTnode* insert(FSTnode* node,ipv4_pfx* pfx, int stride_size, int *pos_pfx);
 int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx);
-int* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, int* found);
-uint32_t new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry* found);
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size);
-uint32_t new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
+ipv4_pfx* new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d, ipv4_pfx *entry);
 void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size);
+void print_usage(char *argv[]);

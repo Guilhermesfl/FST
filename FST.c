@@ -84,36 +84,38 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	assert(addrs_file != NULL);
 
 	uint8_t a0,b0,c0,d0;
-	int pos_pfx, i;
-	entry *LMP = NULL;
+	int pos_pfx, i=0;
 
 	while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 			&a0, &b0, &c0, &d0) == 4){
+		entry *LMP = NULL;
 		pos_pfx = 31;
 		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 		entry->netmask = 31;
 		
 		LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 	
-		printf("Prefix = ");
-		for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
-		printf("\n");
+		//printf("Prefix = ");
+		//for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
 		if(LMP == NULL) {
-			printf("No matching prefixes! Default route :\n");
-			for (int j = 0; j < 32; ++j) printf("0");
+			i++;
+			//printf("     ->    Default Route\n");
+			//for (int j = 0; j < 32; ++j) printf("0");
 		}else {
-			i = 31;
-			printf("LMP = ");
-			while(LMP->pfx[i] != -1){
-				printf("%d", LMP->pfx[i]);
-				i--;
-			}
-			printf("\n");
-			printf("Next hop = ");
+			//i = 31;
+			//printf("LMP = ");
+			//while(LMP->pfx[i] != -1){
+			//	printf("%d", LMP->pfx[i]);
+			//	i--;
+			//}
+			//printf("\n");
+			//printf("Next hop = ");
+			printf("%d.%d.%d.%d", a0,b0,c0,d0);
+			printf("     ->    ");
 			printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
 		}
-		printf("\n");
 	}
+	printf("%d\n", i);
 }
 /*
 *Function responsible for, given the prefix, return the LMP

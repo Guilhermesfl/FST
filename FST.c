@@ -4,6 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <time.h>
+
 /*
 *Function responsible for print how to run the program 
 */
@@ -85,37 +87,41 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 
 	uint8_t a0,b0,c0,d0;
 	int pos_pfx, i=0;
-
+	double full_time= 0;
 	while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 			&a0, &b0, &c0, &d0) == 4){
 		entry *LMP = NULL;
 		pos_pfx = 31;
 		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 		entry->netmask = 31;
-		
+		clock_t begin = clock();
 		LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
-	
+		clock_t end = clock();
+		double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
+		full_time += time_spent;
+		//printf("%f\n", time_spent);
 		//printf("Prefix = ");
 		//for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
-		if(LMP == NULL) {
-			i++;
-			//printf("     ->    Default Route\n");
-			//for (int j = 0; j < 32; ++j) printf("0");
-		}else {
-			//i = 31;
-			//printf("LMP = ");
-			//while(LMP->pfx[i] != -1){
-			//	printf("%d", LMP->pfx[i]);
-			//	i--;
-			//}
-			//printf("\n");
-			//printf("Next hop = ");
-			printf("%d.%d.%d.%d", a0,b0,c0,d0);
-			printf("     ->    ");
-			printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-		}
+		//if(LMP == NULL) {
+		//	i++;
+		//	//printf("     ->    Default Route\n");
+		//	//for (int j = 0; j < 32; ++j) printf("0");
+		//}else {
+		//	//i = 31;
+		//	//printf("LMP = ");
+		//	//while(LMP->pfx[i] != -1){
+		//	//	printf("%d", LMP->pfx[i]);
+		//	//	i--;
+		//	//}
+		//	//printf("\n");
+		//	//printf("Next hop = ");
+		//	printf("%d.%d.%d.%d", a0,b0,c0,d0);
+		//	printf("     ->    ");
+		//	printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
+		//}
 	}
-	printf("%d\n", i);
+	printf("%f\n", full_time);
+	//printf("%d\n", i);
 }
 /*
 *Function responsible for, given the prefix, return the LMP

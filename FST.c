@@ -13,7 +13,7 @@ void print_usage(char *argv[]){
 	printf("Usage: %s stride_size <file1> <file2> <file3> ", argv[0]);
 	printf("\n");
 	printf("Options:\n");
-	printf("stride_size - size of prefix in each node\n");
+	printf("stride_size - size of prefix in each node(must be a multipe of 24 and 32)\n");
 	printf("<file1> -  prefixes netmask 24/32\n");
 	printf("<file2> -  prefixes netmask 24/32\n");
 	printf("<file3> -  random addresses\n");
@@ -119,9 +119,10 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 		//	printf("     ->    ");
 		//	printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
 		//}
+		i++;
 	}
 	printf("%f\n", full_time);
-	//printf("%d\n", i);
+	printf("%d\n", i);
 }
 /*
 *Function responsible for, given the prefix, return the LMP

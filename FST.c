@@ -19,16 +19,16 @@ void print_usage(char *argv[]){
 /* Function responsible for allocatin the FST node according to the stride_size */
 FSTnode* NewNode(int stride_size){
 
-	int n_entries = 2, i, j;
+	int n_entries = 2;
 	
-	for (i = 1; i < stride_size; ++i) n_entries = n_entries*2;
+	for (int i = 1; i < stride_size; ++i) n_entries = n_entries*2;
 	
 	FSTnode* x = (FSTnode*)malloc(sizeof(FSTnode));
   x->entries = (entry *)malloc(n_entries*sizeof(entry));
 
-  for (i = 0; i < n_entries; ++i){
+  for (int i = 0; i < n_entries; ++i){
 		x->entries[i].child = NULL;
-		for (j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
+		for (int j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
   }
 
 	return x; 
@@ -61,13 +61,13 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 /* Function responsible for, given the stride_size, return the correct position in the node entry */
 int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
-	int i,pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx;
+	int i,pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx, j;
 
 	for (i = *pos_pfx; i > (aux2-stride_size); i--)
 	{
 		if(pfx->pfx[i] == 1){
 			aux1 = 2;
-			for (i = 1; i < aux; ++i) aux1 = aux1*2;
+			for (j = 1; j < aux; ++j) aux1 = aux1*2;
 			pos = pos+aux1;
 		}
 		if (i == (aux2-stride_size+1) && pfx->pfx[i] == 1) pos--;
@@ -175,7 +175,7 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 /* Function responsible for reading the prefixes in decimal base and converting it to binary */
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 
-	int base, i, j, pos = 31;
+	int base,i,j,pos = 31;
 	int pfx_dec[4] = {a,b,c,d};
 
 	ipv4_pfx *prefix = malloc(sizeof(ipv4_pfx));

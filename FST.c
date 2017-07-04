@@ -5,22 +5,18 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <time.h>
+#include <math.h>
 
-/*
-*Function responsible for print how to run the program 
-*/
+/* Function responsible for print how to run the program */
 void print_usage(char *argv[]){
 	printf("Usage: %s stride_size <file1> <file2> <file3> ", argv[0]);
 	printf("\n");
-	printf("Options:\n");
 	printf("stride_size - size of prefix in each node(must be a multipe of 24 and 32)\n");
 	printf("<file1> -  prefixes netmask 24/32\n");
-	printf("<file2> -  prefixes netmask 24/32\n");
-	printf("<file3> -  random addresses\n");
+	printf("<file2> -  random addresses\n");
 }
-/*
-*Function responsible for allocatin the FST node according to the stride_size
-*/
+
+/* Function responsible for allocatin the FST node according to the stride_size */
 FSTnode* NewNode(int stride_size){
 
 	int n_entries = 2;
@@ -28,25 +24,28 @@ FSTnode* NewNode(int stride_size){
 	for (int i = 1; i < stride_size; ++i) n_entries = n_entries*2;
 	
 	FSTnode* x = (FSTnode*)malloc(sizeof(FSTnode));
-  	x->entries = (entry *)malloc(n_entries*sizeof(entry));
+  x->entries = (entry *)malloc(n_entries*sizeof(entry));
 
-  	for (int i = 0; i < n_entries; ++i){
+  for (int i = 0; i < n_entries; ++i){
 		x->entries[i].child = NULL;
-  		for (int j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
-  	}
+		for (int j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
+  }
 
 	return x; 
 }
-/*
-*Function responsible for inserting the prefix and the next_hop in the FST
-*/
+
+/* Function responsible for inserting the prefix and the next_hop in the FST */
 FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
+
+	//Position in which the pfx will be inserted
+	int pos = bintodec(pfx,stride_size,pos_pfx);	
 	
-	int pos = bintodec(pfx,stride_size,pos_pfx);//Position in which the pfx will be inserted
-	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
+	//If true, end of pfx
+	if (31 - *pos_pfx == pfx->netmask){ 
 		for (int i = 31; i > 31- pfx->netmask; --i) node->entries[pos].pfx[i] = pfx->pfx[i];
 		for (int i = 0; i < 4; ++i) node->entries[pos].next_hop[i] = pfx->next_hop[i];
-		*pos_pfx = 31; //Resets the position
+		//Resets the position
+		*pos_pfx = 31; 
 	} else {
 		if(node->entries[pos].child != NULL) insert(node->entries[pos].child, \
 		pfx,stride_size,pos_pfx);
@@ -58,9 +57,7 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 
 	return node;
 }
-/*
-*Function responsible for, given the stride_size, return the correct position in the node entry
-*/
+/* Function responsible for, given the stride_size, return the correct position in the node entry */
 int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	int pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx;
@@ -78,9 +75,8 @@ int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
 	return pos;
 }
-/*
-*Function responsible for reading and searching the addrs file 
-*/
+
+/* Function responsible for reading and searching the addrs file  */
 void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 
 	assert(addrs_file != NULL);
@@ -120,17 +116,17 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 		//	printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
 		//}
 		i++;
+		free(entry);
 	}
 	printf("%f\n", full_time);
 	printf("%d\n", i);
 }
-/*
-*Function responsible for, given the prefix, return the LMP
-*/
+
+/* Function responsible for, given the prefix, return the LMP */
 entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry* found){
 
 	int pos = bintodec(pfx,stride_size,pos_pfx);
-	if (31 - *pos_pfx == pfx->netmask){ //If true, end of pfx
+	if (31 - *pos_pfx == pfx->netmask){ 
 		if(node->entries[pos].pfx[31] != -1) return &node->entries[pos];
 	} else {
 		if(node->entries[pos].pfx[31] != -1) found = &node->entries[pos];
@@ -140,15 +136,13 @@ entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry*
 	return found;
 	
 }
-/*
-*Function responsible for reading the prefixes file and the next_hop
-*/
+
+/*Function responsible for reading the prefixes file and the next_hop */
 void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 
 	assert(pfxs_file != NULL);
 
 	uint8_t a0,b0,c0,d0,a1,b1,c1,d1,len;
-	uint32_t pfx,pfx_p;
 	int pos_pfx;
 
 	while(fscanf(pfxs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
@@ -172,11 +166,11 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 		entry = new_ipv4_addr(a1, b1, c1, d1, entry);
 		entry->netmask = len;
 		head_node = insert(head_node,entry,stride_size,&pos_pfx);
+		free(entry);
 	}
 }
-/*
-*Function responsible for reading the prefixes in decimal base and converting it to binary
-*/
+
+/* Function responsible for reading the prefixes in decimal base and converting it to binary */
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 
 	int pos = 31;
@@ -198,14 +192,23 @@ ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 	
 	return prefix;
 }
-/*
-*Function responsible for return the next_hop 
-*/
+
+/* Function responsible for return the next_hop  */
 ipv4_pfx* new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d, ipv4_pfx *entry)
 {
-		entry->next_hop[0] = a;
-		entry->next_hop[1] = b;
-		entry->next_hop[2] = c;
-		entry->next_hop[3] = d;
-    	return entry; 
+	entry->next_hop[0] = a;
+	entry->next_hop[1] = b;
+	entry->next_hop[2] = c;
+	entry->next_hop[3] = d;
+	return entry; 
+}
+
+void free_memory(FSTnode* node, int stride_size){
+
+	for(int i=0;i<pow(2,stride_size);i++){
+		if(node->entries[i].child) free_memory(node->entries[i].child, stride_size);
+	}
+	free(node->entries);
+	free(node);
+
 }

@@ -19,16 +19,16 @@ void print_usage(char *argv[]){
 /* Function responsible for allocatin the FST node according to the stride_size */
 FSTnode* NewNode(int stride_size){
 
-	int n_entries = 2;
+	int n_entries = 2,i,j;
 	
-	for (int i = 1; i < stride_size; ++i) n_entries = n_entries*2;
+	for (i = 1; i < stride_size; ++i) n_entries = n_entries*2;
 	
 	FSTnode* x = (FSTnode*)malloc(sizeof(FSTnode));
   x->entries = (entry *)malloc(n_entries*sizeof(entry));
 
-  for (int i = 0; i < n_entries; ++i){
+  for (i = 0; i < n_entries; ++i){
 		x->entries[i].child = NULL;
-		for (int j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
+		for (j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
   }
 
 	return x; 

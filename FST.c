@@ -39,11 +39,12 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 
 	//Position in which the pfx will be inserted
 	int pos = bintodec(pfx,stride_size,pos_pfx);	
+	int i;
 	
 	//If true, end of pfx
 	if (31 - *pos_pfx == pfx->netmask){ 
-		for (int i = 31; i > 31- pfx->netmask; --i) node->entries[pos].pfx[i] = pfx->pfx[i];
-		for (int i = 0; i < 4; ++i) node->entries[pos].next_hop[i] = pfx->next_hop[i];
+		for (i = 31; i > 31- pfx->netmask; --i) node->entries[pos].pfx[i] = pfx->pfx[i];
+		for (i = 0; i < 4; ++i) node->entries[pos].next_hop[i] = pfx->next_hop[i];
 		//Resets the position
 		*pos_pfx = 31; 
 	} else {
@@ -60,12 +61,13 @@ FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 /* Function responsible for, given the stride_size, return the correct position in the node entry */
 int bintodec(ipv4_pfx *pfx, int stride_size, int *pos_pfx){
 
-	int pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx;
-	for (int i = *pos_pfx; i > (aux2-stride_size); i--)
+	int i,pos = 0,aux=stride_size-1,aux1,aux2 = *pos_pfx;
+
+	for (i = *pos_pfx; i > (aux2-stride_size); i--)
 	{
 		if(pfx->pfx[i] == 1){
 			aux1 = 2;
-			for (int i = 1; i < aux; ++i) aux1 = aux1*2;
+			for (i = 1; i < aux; ++i) aux1 = aux1*2;
 			pos = pos+aux1;
 		}
 		if (i == (aux2-stride_size+1) && pfx->pfx[i] == 1) pos--;
@@ -173,16 +175,15 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 /* Function responsible for reading the prefixes in decimal base and converting it to binary */
 ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 
-	int pos = 31;
+	int base, i, j, pos = 31;
 	int pfx_dec[4] = {a,b,c,d};
-	int base;
 
 	ipv4_pfx *prefix = malloc(sizeof(ipv4_pfx));
 
-	for(int j = 0; j<4; j++){
+	for(j = 0; j<4; j++){
 		a = pfx_dec[j];
 		base = 128;
-		for(int i = 0; i < 8; i++){
+		for(i = 0; i < 8; i++){
 			prefix->pfx[pos] = a/base;
 			if(prefix->pfx[pos] != 0) a-= base;
 			base /= 2;
@@ -205,7 +206,8 @@ ipv4_pfx* new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d, ipv4_pfx *en
 
 void free_memory(FSTnode* node, int stride_size){
 
-	for(int i=0;i<pow(2,stride_size);i++){
+	int i;
+	for(i=0;i<pow(2,stride_size);i++){
 		if(node->entries[i].child) free_memory(node->entries[i].child, stride_size);
 	}
 	free(node->entries);

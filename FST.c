@@ -98,25 +98,25 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 		double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
 		full_time += time_spent;
 		//printf("%f\n", time_spent);
-		//printf("Prefix = ");
+		#ifdef DEBUG
+		printf("Address = ");
+		printf("%d.%d.%d.%d", a0,b0,c0,d0);
 		//for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
-		//if(LMP == NULL) {
-		//	i++;
-		//	//printf("     ->    Default Route\n");
-		//	//for (int j = 0; j < 32; ++j) printf("0");
-		//}else {
-		//	//i = 31;
-		//	//printf("LMP = ");
-		//	//while(LMP->pfx[i] != -1){
-		//	//	printf("%d", LMP->pfx[i]);
-		//	//	i--;
-		//	//}
-		//	//printf("\n");
-		//	//printf("Next hop = ");
-		//	printf("%d.%d.%d.%d", a0,b0,c0,d0);
-		//	printf("     ->    ");
-		//	printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-		//}
+		if(LMP == NULL) {
+			printf("     ->    Default Route\n");
+			//for (int j = 0; j < 32; ++j) printf("0");
+		}else {
+			//int w = 31;
+			//printf("     ->    LMP = ");
+			//while(LMP->pfx[w] != -1 && w > 0){
+			//	printf("%d", LMP->pfx[w]);
+			//	w--;
+			//}
+			printf("     ->     Next hop = ");
+			printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
+			//printf("\n");
+		}
+		#endif
 		i++;
 		free(entry);
 	}
@@ -151,7 +151,7 @@ void read_prefixes(FILE *pfxs_file, FSTnode *head_node, int stride_size){
 			&a0, &b0, &c0, &d0) == 4){
 		if(fscanf(pfxs_file,"/%"SCNu8, &len) != 1){
 			len = 0;
-			if(d0> 0) len = 32;
+			if(d0 > 0) len = 32;
 			else if (c0 > 0) len = 24;
 			else if (b0 > 0) len = 16;
 			else if (a0 > 0) len = 8;

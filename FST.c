@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <time.h>
 #include <math.h>
+#include <omp.h>
 
 /* Function responsible for print how to run the program */
 void print_usage(char *argv[]){
@@ -86,40 +87,42 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	uint8_t a0,b0,c0,d0;
 	int pos_pfx, i=0;
 	double full_time= 0;
-	while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
-			&a0, &b0, &c0, &d0) == 4){
-		entry *LMP = NULL;
-		pos_pfx = 31;
-		ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
-		entry->netmask = 31;
-		clock_t begin = clock();
-		LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
-		clock_t end = clock();
-		double time_spent = (double)(end-begin)/CLOCKS_PER_SEC;
-		full_time += time_spent;
-		//printf("%f\n", time_spent);
-		#ifdef DEBUG
-		printf("Address = ");
-		printf("%d.%d.%d.%d", a0,b0,c0,d0);
-		//for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
-		if(LMP == NULL) {
-			printf("     ->    Default Route\n");
-			//for (int j = 0; j < 32; ++j) printf("0");
-		}else {
-			//int w = 31;
-			//printf("     ->    LMP = ");
-			//while(LMP->pfx[w] != -1 && w > 0){
-			//	printf("%d", LMP->pfx[w]);
-			//	w--;
-			//}
-			printf("     ->     Next hop = ");
-			printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-			//printf("\n");
+	
+	#pragma omp parallel
+		while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
+				&a0, &b0, &c0, &d0) == 4){
+			entry *LMP = NULL;
+			pos_pfx = 31;
+			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
+			entry->netmask = 31;
+			double exec_time = omp_get_wtime();
+			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
+			exec_time = omp_get_wtime() - exec_time;
+			#pragma omp critical
+				full_time += exec_time;
+			#ifdef DEBUG
+				//printf("%f\n", time_spent);
+				printf("Address = ");
+				printf("%d.%d.%d.%d", a0,b0,c0,d0);
+				//for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
+				if(LMP == NULL) {
+					printf("     ->    Default Route\n");
+					//for (int j = 0; j < 32; ++j) printf("0");
+				}else {
+					//int w = 31;
+					//printf("     ->    LMP = ");
+					//while(LMP->pfx[w] != -1 && w > 0){
+					//	printf("%d", LMP->pfx[w]);
+					//	w--;
+					//}
+					printf("     ->     Next hop = ");
+					printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
+					//printf("\n");
+				}
+			#endif
+			i++;
+			free(entry);
 		}
-		#endif
-		i++;
-		free(entry);
-	}
 	printf("%f\n", full_time);
 	printf("%d\n", i);
 }

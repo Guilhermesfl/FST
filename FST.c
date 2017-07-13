@@ -88,17 +88,20 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	int pos_pfx, i=0;
 	double full_time= 0;
 	
-	#pragma omp parallel
+	//#pragma omp parallel
 		while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 				&a0, &b0, &c0, &d0) == 4){
 			entry *LMP = NULL;
 			pos_pfx = 31;
 			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 			entry->netmask = 31;
-			double exec_time = omp_get_wtime();
+			clock_t start = clock();
+			//double exec_time = omp_get_wtime();
 			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
-			exec_time = omp_get_wtime() - exec_time;
-			#pragma omp critical
+			clock_t end = clock();
+			double exec_time = (double)(end - start)/CLOCKS_PER_SEC;
+			//exec_time = omp_get_wtime() - exec_time;
+				//#pragma omp critical
 				full_time += exec_time;
 			#ifdef DEBUG
 				//printf("%f\n", time_spent);

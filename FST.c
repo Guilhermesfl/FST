@@ -85,7 +85,7 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	assert(addrs_file != NULL);
 
 	uint8_t a0,b0,c0,d0;
-	int pos_pfx, i=0;
+	int pos_pfx, i=0, j;
 	double full_time= 0;
 	
 		#pragma omp parallel
@@ -107,7 +107,7 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 						printf("Address Decimal = ");
 						printf("%d.%d.%d.%d ", a0,b0,c0,d0);
 						printf("Address Binary = ");
-						for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
+						for (j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
 						printf("\n");
 						if(LMP == NULL) {
 							printf("Next hop = Default Route\n");

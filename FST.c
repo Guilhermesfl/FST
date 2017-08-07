@@ -95,23 +95,18 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 			entry->netmask = 31;
 			double exec_time = omp_get_wtime();
-			#pragma omp parallel
+			//#pragma omp parallel
 				LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 			exec_time = omp_get_wtime() - exec_time;
 			#pragma omp critical
 				full_time += exec_time;
 			#ifdef DEBUG
 				#pragma omp critical
-						printf("%.10lf\n", exec_time);
-						//printf("%f\n", time_spent);
+						//printf("%.10lf\n", exec_time);
 						printf("Address Decimal = ");
 						printf("%d.%d.%d.%d ", a0,b0,c0,d0);
 						printf("Address Binary = ");
-<<<<<<< HEAD
-						for (int j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
-=======
-						for (j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
->>>>>>> b1d0709dfd3c0a90e187a65eadf1979349468c0d
+						for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
 						printf("\n");
 						if(LMP == NULL) {
 							printf("Next hop = Default Route\n");
@@ -125,7 +120,6 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 							}
 							printf("     ->     Next hop = ");
 							printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-							printf("\n");
 						}
 			#endif
 			i++;

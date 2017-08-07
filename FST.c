@@ -88,7 +88,6 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	int pos_pfx, i=0;
 	double full_time= 0;
 	
-		#pragma omp parallel
 		while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 				&a0, &b0, &c0, &d0) == 4){
 			entry *LMP = NULL;
@@ -96,7 +95,8 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 			entry->netmask = 31;
 			double exec_time = omp_get_wtime();
-			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
+			#pragma omp parallel
+				LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 			exec_time = omp_get_wtime() - exec_time;
 			#pragma omp critical
 				full_time += exec_time;
@@ -107,7 +107,7 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 						printf("Address Decimal = ");
 						printf("%d.%d.%d.%d ", a0,b0,c0,d0);
 						printf("Address Binary = ");
-						for (int j = 31; j > 0; --j) printf("%d", entry->pfx[j]);
+						for (int j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
 						printf("\n");
 						if(LMP == NULL) {
 							printf("Next hop = Default Route\n");

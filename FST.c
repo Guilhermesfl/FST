@@ -88,6 +88,7 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 	int pos_pfx, i=0;
 	double full_time= 0;
 	
+	//#pragma omp parallel 
 		while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
 				&a0, &b0, &c0, &d0) == 4){
 			entry *LMP = NULL;
@@ -95,42 +96,42 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 			entry->netmask = 31;
 			double exec_time = omp_get_wtime();
-			//#pragma omp parallel
-				LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
+			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 			exec_time = omp_get_wtime() - exec_time;
 			#pragma omp critical
 				full_time += exec_time;
 			#ifdef DEBUG
-				#pragma omp critical
+				#pragma omp critical 
+				{
 						//printf("%.10lf\n", exec_time);
-						printf("Address Decimal = ");
+						//printf("Address Decimal = ");
 						printf("%d.%d.%d.%d ", a0,b0,c0,d0);
-						printf("Address Binary = ");
-						int j;
-						for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
-						printf("\n");
+						//printf("Address Binary = ");
+						//int j;
+						//for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
+						//printf("\n");
 						if(LMP == NULL) {
-							printf("Next hop = Default Route\n");
+							//printf("Next hop = Default Route\n");
+							printf(" -> (...)\n");
 							//for (int j = 0; j < 32; ++j) printf("0");
 						}else {
-							int w = 31;
-							int g = 0;
-							printf("LMP = ");
-							while(LMP->pfx[w] != -1 && w >= 0.0){
-								printf("%d", LMP->pfx[w]);
-								w--;
-								g++;
-							}
+							//int g = 0;
+							//printf("LMP = ");
+							//while(LMP->pfx[w] != -1 && w >= 0.0){
+							//	printf("%d", LMP->pfx[w]);
+							//	g++;
+							//}
 							//printf("\n w = %d g = %d\n", w, g);
-							printf("     ->     Next hop = ");
+							printf("     ->     ");
 							printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
 						}
+				}
 			#endif
 			i++;
 			free(entry);
 		}
 	printf("%f\n", full_time);
-	printf("%d\n", i);
+	//printf("Number of forwarded addrs = %d\n", i);
 }
 
 /* Function responsible for, given the prefix, return the LMP */

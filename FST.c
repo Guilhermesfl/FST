@@ -86,7 +86,8 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 
 	uint8_t a0,b0,c0,d0;
 	int pos_pfx, i=0;
-	double full_time= 0;
+	double full_time_omp = 0;
+	double full_time_clock = 0;
 	
 	//#pragma omp parallel 
 		while(fscanf(addrs_file,"%"SCNu8".%"SCNu8".%"SCNu8".%"SCNu8, \
@@ -95,11 +96,16 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			pos_pfx = 31;
 			ipv4_pfx *entry = new_ipv4_prefix(a0,b0,c0,d0);
 			entry->netmask = 31;
-			double exec_time = omp_get_wtime();
+			clock_t t;
+			t = clock();
+			double exec_time_omp = omp_get_wtime();
 			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
-			exec_time = omp_get_wtime() - exec_time;
+			t = clock() - t;
+			double exec_time_clock = ((double)t)/CLOCKS_PER_SEC; // in seconds
+			exec_time_omp  = omp_get_wtime() - exec_time_omp;
 			#pragma omp critical
-				full_time += exec_time;
+				full_time_omp += exec_time_omp;
+				full_time_clock += exec_time_clock;
 			#ifdef DEBUG
 				#pragma omp critical 
 				{
@@ -130,7 +136,8 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			i++;
 			free(entry);
 		}
-	printf("%f\n", full_time);
+	printf("Time measured with omp = %f\n", full_time_omp);
+	printf("Time measured with clock = %f\n", full_time_clock);
 	//printf("Number of forwarded addrs = %d\n", i);
 }
 

@@ -6,7 +6,9 @@
 #include <inttypes.h>
 #include <time.h>
 #include <math.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 /* Function responsible for print how to run the program */
 void print_usage(char *argv[]){
@@ -98,13 +100,13 @@ void read_addr(FILE *addrs_file, FSTnode *head_node,int stride_size){
 			entry->netmask = 31;
 			clock_t t;
 			t = clock();
-			double exec_time_omp = omp_get_wtime();
+			//double exec_time_omp = omp_get_wtime();
 			LMP = search(head_node,entry,stride_size,&pos_pfx, LMP);
 			t = clock() - t;
 			double exec_time_clock = ((double)t)/CLOCKS_PER_SEC; // in seconds
-			exec_time_omp  = omp_get_wtime() - exec_time_omp;
+			//exec_time_omp  = omp_get_wtime() - exec_time_omp;
 			#pragma omp critical
-				full_time_omp += exec_time_omp;
+				//full_time_omp += exec_time_omp;
 				full_time_clock += exec_time_clock;
 			#ifdef DEBUG
 				#pragma omp critical 

@@ -1,1 +1,0 @@
-/usr/bin/cc  -lm   CMakeFiles/FST.dir/src/FST.c.o CMakeFiles/FST.dir/src/main.c.o  -o ../bin/FST -rdynamic -lm 

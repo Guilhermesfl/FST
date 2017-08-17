@@ -159,7 +159,9 @@ void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,in
 	//printf("Time measured with clock = %f\n", exec_time_clock);
 	exec_time_omp  = omp_get_wtime() - exec_time_omp;
 	printf("Time measured with omp = %f\n", exec_time_omp);
-	//printf("Number of forwarded addrs = %d\n", j);
+	printf("Number of unique addrs forwarded  = %d\n", num_addrs);
+	printf("Total number of addrs forwarded  = %d\n", num_addrs_for);
+	printf("#Addrs/time = %f\n", num_addrs_for/exec_time_omp);
 }
 
 /* Function responsible for, given the prefix, return the LMP */

@@ -1,20 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "FST.h"
-#include <time.h>
 
 int main(int argc, char *argv[])
 {
 	FSTnode *head_node;
 	ipv4_pfx *addrs;
-	int stride_size,num_addrs,num_addrs_for;
+	int stride_size,num_addrs,num_addrs_for, thread_count;
 	FILE *pfxs_file, *addrs_file;
 
-	if(argc != 5){
+	if(argc != 6){
 		print_usage(argv);
 		return 0;
 	}
-
 
 	stride_size = (atoi)(argv[1]);
 	head_node = NewNode(stride_size);
@@ -27,7 +25,8 @@ int main(int argc, char *argv[])
 	addrs = read_addr(addrs_file,num_addrs);
 
 	num_addrs_for = (atoi)(argv[4]);
-	forward(addrs,head_node,stride_size,num_addrs,num_addrs_for);
+	thread_count = (atoi)(argv[5]);
+	forward(addrs,head_node,stride_size,num_addrs,num_addrs_for, thread_count);
 
 	free_memory(head_node,stride_size);
 	fclose(pfxs_file);

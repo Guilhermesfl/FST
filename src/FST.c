@@ -12,12 +12,13 @@
 
 /* Function responsible for print how to run the program */
 void print_usage(char *argv[]){
-	printf("Usage: %s stride_size <file1> <file2> num_addrs ", argv[0]);
+	printf("Usage: %s stride_size <file1> <file2> num_addrs thread_count", argv[0]);
 	printf("\n");
 	printf("stride_size - size of prefix in each node(must be a multipe of 24 and 32)\n");
 	printf("<file1> -  prefixes netmask 24/32\n");
 	printf("<file2> -  random addresses\n");
 	printf("num_addrs  -  number of addresses to be forwarded\n");
+	printf("thread_count -  number of threads to execute in parallel\n");
 }
 
 /* Function responsible for allocatin the FST node according to the stride_size */
@@ -109,63 +110,56 @@ ipv4_pfx* read_addr(FILE *addrs_file, int num_addrs){
 }
 
 /*Function responsible for forwarding the addrs*/
-void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,int num_addrs_for){
+void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,int num_addrs_for, int thread_count){
 
-	int pos_pfx, i=0,j;
+	int pos_pfx, i=0,j, th_id, num_threads;
 	double full_time_omp = 0;
 	double full_time_clock = 0;
 
-	for(j=0;j<num_addrs_for;j++){
-		pos_pfx = 31;
-		//clock_t t;
-		//t = clock();
-		double exec_time_omp = omp_get_wtime();
-		entry *LMP = NULL;
-		LMP = search(head_node,&addrs[i],stride_size,&pos_pfx, LMP);
-		//t = clock() - t;
-		//double exec_time_clock = ((double)t)/CLOCKS_PER_SEC; // in seconds
-		exec_time_omp  = omp_get_wtime() - exec_time_omp;
-		#pragma omp critical
-		{
-			full_time_omp += exec_time_omp;
-			//full_time_clock += exec_time_clock;
-		}
-		#ifdef DEBUG
-		{
-			#pragma omp critical 
+	double exec_time_omp = omp_get_wtime();
+	//clock_t t;
+	//t = clock();
+	#pragma omp parallel for num_threads(thread_count) 
+		for(j=0;j<num_addrs_for;j++){
+			pos_pfx = 31;
+			entry *LMP = NULL;
+			LMP = search(head_node,&addrs[i],stride_size,&pos_pfx, LMP);
+			#ifndef NDEBUG
 			{
-					//printf("%.10lf\n", exec_time);
-					//printf("Address Decimal = ");
-					printf("%d.%d.%d.%d ", addrs[i].next_hop[0],addrs[i].next_hop[1], \
-							addrs[i].next_hop[2],addrs[i].next_hop[3]);
-					//printf("Address Binary = ");
-					//int j;
-					//for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
-					//printf("\n");
-					if(LMP == NULL) {
-						//printf("Next hop = Default Route\n");
-						printf(" -> (...)\n");
-						//for (int j = 0; j < 32; ++j) printf("0");
-					}else {
-						//int g = 0;
-						//printf("LMP = ");
-						//while(LMP->pfx[w] != -1 && w >= 0.0){
-						//	printf("%d", LMP->pfx[w]);
-						//	g++;
-						//}
-						//printf("\n w = %d g = %d\n", w, g);
-						printf("     ->     ");
-						printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-					}
+				#pragma omp critical 
+				{
+						printf("%d.%d.%d.%d ", addrs[i].next_hop[0],addrs[i].next_hop[1], \
+								addrs[i].next_hop[2],addrs[i].next_hop[3]);
+						//printf("Address Binary = ");
+						//int j;
+						//for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
+						//printf("\n");
+						if(LMP == NULL) printf(" -> (...)\n");
+						else {
+							//printf("LMP = ");
+							//while(LMP->pfx[w] != -1 && w >= 0.0){
+							//	printf("%d", LMP->pfx[w]);
+							//}
+							printf("     ->     ");
+							printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
+						}
+				}
 			}
-		}
-		#endif
-		i++;
-		if(i >= num_addrs) i = 0;
+			#endif
+			//th_id = omp_get_thread_num();
+			//printf("#thread id = %d\n", th_id);
+			//num_threads = omp_get_num_threads();
+			//printf("%d\n", num_threads);
+			i++;
+			if(i >= num_addrs) i = 0;
+			//printf("%d\n", j);
 	}
-	printf("Time measured with omp = %f\n", full_time_omp);
-	printf("Time measured with clock = %f\n", full_time_clock);
-	printf("Number of forwarded addrs = %d\n", j);
+	//t = clock() - t;
+	//double exec_time_clock = ((double)t)/CLOCKS_PER_SEC; // in seconds
+	//printf("Time measured with clock = %f\n", exec_time_clock);
+	exec_time_omp  = omp_get_wtime() - exec_time_omp;
+	printf("Time measured with omp = %f\n", exec_time_omp);
+	//printf("Number of forwarded addrs = %d\n", j);
 }
 
 /* Function responsible for, given the prefix, return the LMP */

@@ -32,4 +32,4 @@ add_executable(FST
 target_link_libraries(FST m)
 # Adds the directory containing the test files for this project.
 #add_subdirectory(test EXCLUDE_FROM_ALL)
-
+set(CMAKE_BUILD_TYPE Release)

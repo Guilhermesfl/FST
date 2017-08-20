@@ -9,6 +9,12 @@ int main(int argc, char *argv[])
 	int stride_size,num_addrs,num_addrs_for, thread_count;
 	FILE *pfxs_file, *addrs_file;
 
+	#ifdef __MIC__
+		printf("Running on Intel(R) Xeon(tm) Phi\n");
+	#else
+		printf("Running on HOST\n");
+	#endif
+
 	if(argc != 6){
 		print_usage(argv);
 		return 0;

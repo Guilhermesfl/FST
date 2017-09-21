@@ -6,7 +6,8 @@ int main(int argc, char *argv[])
 {
 	FSTnode *head_node;
 	ipv4_pfx *addrs;
-	int stride_size,num_addrs,num_addrs_for, thread_count;
+	float exec_time=0;
+	int stride_size,num_addrs,num_addrs_for,thread_count, num_exec;;
 	FILE *pfxs_file, *addrs_file;
 
 	#ifdef __MIC__
@@ -15,11 +16,13 @@ int main(int argc, char *argv[])
 		printf("Running on HOST\n");
 	#endif
 
-	if(argc != 6){
+	/* Checks if number of arguments are correct */
+	if(argc != 7){
 		print_usage(argv);
 		return 0;
 	}
 
+	/* Prepares the structures and the command line arguments */
 	stride_size = (atoi)(argv[1]);
 	head_node = NewNode(stride_size);
 
@@ -32,8 +35,19 @@ int main(int argc, char *argv[])
 
 	num_addrs_for = (atoi)(argv[4]);
 	thread_count = (atoi)(argv[5]);
-	forward(addrs,head_node,stride_size,num_addrs,num_addrs_for, thread_count);
+	num_exec = (atoi)(argv[6]);
 
+	/* Forward the addresses*/
+	for (int i = 0; i < num_exec; i++) {
+		exec_time += forward(addrs,head_node,stride_size,num_addrs,num_addrs_for, thread_count, num_exec);
+	}
+	exec_time = exec_time/num_exec;
+	printf("Execute time = %f\n", exec_time);
+	printf("Number of unique addrs forwarded  = %d\n", num_addrs);
+	printf("Total number of addrs forwarded  = %d\n", num_addrs_for);
+	printf("#Addrs/time = %f\n", num_addrs_for/exec_time);
+
+	/* Free all the memory allocated */
 	free_memory(head_node,stride_size);
 	fclose(pfxs_file);
 	fclose(addrs_file);

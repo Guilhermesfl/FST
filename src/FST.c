@@ -12,22 +12,23 @@
 
 /* Function responsible for print how to run the program */
 void print_usage(char *argv[]){
-	printf("Usage: %s stride_size <file1> <file2> num_addrs thread_count", argv[0]);
+	printf("Usage: %s stride_size <file1> <file2> num_addrs thread_count num_exec", argv[0]);
 	printf("\n");
 	printf("stride_size - size of prefix in each node(must be a multipe of 24 and 32)\n");
 	printf("<file1> -  prefixes netmask 24/32\n");
 	printf("<file2> -  random addresses\n");
 	printf("num_addrs  -  number of addresses to be forwarded\n");
 	printf("thread_count -  number of threads to execute in parallel\n");
+	printf("num_exec  - number of times to execute the program\n");
 }
 
 /* Function responsible for allocatin the FST node according to the stride_size */
 FSTnode* NewNode(int stride_size){
 
 	int n_entries = 2,i,j;
-	
+
 	for (i = 1; i < stride_size; ++i) n_entries = n_entries*2;
-	
+
 	FSTnode* x = (FSTnode*)malloc(sizeof(FSTnode));
   x->entries = (entry *)malloc(n_entries*sizeof(entry));
 
@@ -36,22 +37,22 @@ FSTnode* NewNode(int stride_size){
 		for (j = 0; j < 32; ++j) x->entries[i].pfx[j] = -1;
   }
 
-	return x; 
+	return x;
 }
 
 /* Function responsible for inserting the prefix and the next_hop in the FST */
 FSTnode* insert(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx) {
 
 	//Position in which the pfx will be inserted
-	int pos = bintodec(pfx,stride_size,pos_pfx);	
+	int pos = bintodec(pfx,stride_size,pos_pfx);
 	int i;
-	
+
 	//If true, end of pfx
-	if (31 - *pos_pfx == pfx->netmask){ 
+	if (31 - *pos_pfx == pfx->netmask){
 		for (i = 31; i > 31- pfx->netmask; --i) node->entries[pos].pfx[i] = pfx->pfx[i];
 		for (i = 0; i < 4; ++i) node->entries[pos].next_hop[i] = pfx->next_hop[i];
 		//Resets the position
-		*pos_pfx = 31; 
+		*pos_pfx = 31;
 	} else {
 		if(node->entries[pos].child != NULL) insert(node->entries[pos].child, \
 		pfx,stride_size,pos_pfx);
@@ -110,7 +111,7 @@ ipv4_pfx* read_addr(FILE *addrs_file, int num_addrs){
 }
 
 /*Function responsible for forwarding the addrs*/
-void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,int num_addrs_for, int thread_count){
+float forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,int num_addrs_for, int thread_count, int num_exec){
 
 	int pos_pfx, i=0,j, th_id, num_threads;
 	double full_time_omp = 0;
@@ -119,14 +120,14 @@ void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,in
 	double exec_time_omp = omp_get_wtime();
 	//clock_t t;
 	//t = clock();
-	#pragma omp parallel for num_threads(thread_count) 
+	#pragma omp parallel for num_threads(thread_count)
 		for(j=0;j<num_addrs_for;j++){
 			pos_pfx = 31;
 			entry *LMP = NULL;
 			LMP = search(head_node,&addrs[i],stride_size,&pos_pfx, LMP);
 			#ifndef NDEBUG
 			{
-				#pragma omp critical 
+				#pragma omp critical
 				{
 						printf("%d.%d.%d.%d ", addrs[i].next_hop[0],addrs[i].next_hop[1], \
 								addrs[i].next_hop[2],addrs[i].next_hop[3]);
@@ -158,17 +159,16 @@ void forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,in
 	//double exec_time_clock = ((double)t)/CLOCKS_PER_SEC; // in seconds
 	//printf("Time measured with clock = %f\n", exec_time_clock);
 	exec_time_omp  = omp_get_wtime() - exec_time_omp;
-	printf("Time measured with omp = %f\n", exec_time_omp);
-	printf("Number of unique addrs forwarded  = %d\n", num_addrs);
-	printf("Total number of addrs forwarded  = %d\n", num_addrs_for);
-	printf("#Addrs/time = %f\n", num_addrs_for/exec_time_omp);
+	//printf("Time measured with omp = %f\n", exec_time_omp);
+
+	return exec_time_omp;
 }
 
 /* Function responsible for, given the prefix, return the LMP */
 entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry* found){
 
 	int pos = bintodec(pfx,stride_size,pos_pfx);
-	if (31 - *pos_pfx == pfx->netmask){ 
+	if (31 - *pos_pfx == pfx->netmask){
 		if(node->entries[pos].pfx[31] != -1) return &node->entries[pos];
 	} else {
 		if(node->entries[pos].pfx[31] != -1) found = &node->entries[pos];
@@ -176,7 +176,7 @@ entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry*
 		return found;
 	}
 	return found;
-	
+
 }
 
 /*Function responsible for reading the prefixes file and the next_hop */
@@ -218,7 +218,7 @@ ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 	int base,i,j,pos = 31;
 	int pfx_dec[4] = {a,b,c,d};
 
-	ipv4_pfx *prefix = malloc(sizeof(ipv4_pfx)); 
+	ipv4_pfx *prefix = malloc(sizeof(ipv4_pfx));
 
 	for(j = 0; j<4; j++){
 		a = pfx_dec[j];
@@ -230,7 +230,7 @@ ipv4_pfx* new_ipv4_prefix(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
 			pos--;
 		}
 	}
-	
+
 	return prefix;
 }
 
@@ -241,7 +241,7 @@ ipv4_pfx* new_ipv4_addr(uint8_t a, uint8_t b, uint8_t c, uint8_t d, ipv4_pfx *en
 	entry->next_hop[1] = b;
 	entry->next_hop[2] = c;
 	entry->next_hop[3] = d;
-	return entry; 
+	return entry;
 }
 
 void free_memory(FSTnode* node, int stride_size){

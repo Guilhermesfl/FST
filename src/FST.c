@@ -177,10 +177,8 @@ entry* search(FSTnode* node,ipv4_pfx *pfx, int stride_size, int *pos_pfx, entry*
 	} else {
 		if(node->entries[pos].pfx[31] != -1) found = &node->entries[pos];
 		if(node->entries[pos].child != NULL) found = search(node->entries[pos].child,pfx,stride_size,pos_pfx, found);
-		// printf("%d\n", *pos_pfx);
 		return found;
 	}
-	// printf("%d\n", *pos_pfx);
 	return found;
 
 }

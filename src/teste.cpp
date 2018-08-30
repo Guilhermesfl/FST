@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
   for(int i=0; i < num_max_thread; i++){
   	thread_num_int = i + 1;
   	thread_num_str = to_string(thread_num_int);
-  	syscall = "./FST " + stride_size_str + " ../data/prefixes-32.txt ../data/randomAddrs.txt 1000000 " \
+  	syscall = "./FST " + stride_size_str + " ../data/prefixes-24.txt ../data/randomAddrs.txt 5000000 " \
   										+ thread_num_str + " " + num_exec_thread_str + " >> resultado.txt";
   	const char *run_program = syscall.c_str();
   	system(run_program);

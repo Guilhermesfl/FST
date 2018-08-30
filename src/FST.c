@@ -121,47 +121,52 @@ float forward(ipv4_pfx *addrs,FSTnode *head_node,int stride_size,int num_addrs,i
 	// printf("%d\n", num_addrs);
 	clock_t t;
 	t = clock();
-	#pragma omp parallel for num_threads(thread_count)
+	
+	for(int i = 0; i < num_addrs_for; i++)
 	{
-		for(i=0;i<num_addrs;i++){
-			// printf("%d\n", addrs[i].netmask);
-			pos_pfx = addrs[i].netmask;
-			entry *LMP = NULL;
-			// printf("%d.%d.%d.%d\n", addrs[i].next_hop[0],addrs[i].next_hop[1], \
-			// 			addrs[i].next_hop[2],addrs[i].next_hop[3]);
-			// #pragma omp critical
-			// {
-			LMP = search(head_node,&addrs[i],stride_size,&pos_pfx, LMP);				
-			// 	i++;
-			// 	if(i >= num_addrs) {
-			// 		i = 0;
-			// 	}
-			// }
-			// 	printf("%d.%d.%d.%d ", addrs[i].next_hop[0],addrs[i].next_hop[1], \
-			// 			addrs[i].next_hop[2],addrs[i].next_hop[3]);
-			// 	printf("Address Binary = ");
-			// 	int j;
-			// 	// for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
-			// 	// printf("\n");
-			// 	if(LMP == NULL) printf(" -> (...)\n");
-			// 	else {
-			// 		int w = 31;
-			// 		printf("LMP = ");
-			// 		while(LMP->pfx[w] != -1 && w >= 0.0){
-			// 			printf("%d", LMP->pfx[w]);
-			// 			w--;
-			// 		}
-			// 		printf("     ->     ");
-			// 		printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
-			// 	}
-			// if(i >= num_addrs) i = 0; 
-			//th_id = omp_get_thread_num();
-			//printf("#thread id = %d\n", th_id);
-			//num_threads = omp_get_num_threads();
-			//printf("%d\n", num_threads);
-			//printf("%d\n", j);
-		}
-	} 
+		#pragma omp parallel for num_threads(thread_count)
+		{
+			for(i=0;i<num_addrs;i++){
+				// printf("%d\n", addrs[i].netmask);
+				pos_pfx = addrs[i].netmask;
+				entry *LMP = NULL;
+				// printf("%d.%d.%d.%d\n", addrs[i].next_hop[0],addrs[i].next_hop[1], \
+				// 			addrs[i].next_hop[2],addrs[i].next_hop[3]);
+				// #pragma omp critical
+				// {
+				LMP = search(head_node,&addrs[i],stride_size,&pos_pfx, LMP);				
+				// 	i++;
+				// 	if(i >= num_addrs) {
+				// 		i = 0;
+				// 	}
+				// }
+				// 	printf("%d.%d.%d.%d ", addrs[i].next_hop[0],addrs[i].next_hop[1], \
+				// 			addrs[i].next_hop[2],addrs[i].next_hop[3]);
+				// 	printf("Address Binary = ");
+				// 	int j;
+				// 	// for (j = 31; j >= 0; --j) printf("%d", entry->pfx[j]);
+				// 	// printf("\n");
+				// 	if(LMP == NULL) printf(" -> (...)\n");
+				// 	else {
+				// 		int w = 31;
+				// 		printf("LMP = ");
+				// 		while(LMP->pfx[w] != -1 && w >= 0.0){
+				// 			printf("%d", LMP->pfx[w]);
+				// 			w--;
+				// 		}
+				// 		printf("     ->     ");
+				// 		printf("%d.%d.%d.%d\n", LMP->next_hop[0], LMP->next_hop[1], LMP->next_hop[2], LMP->next_hop[3]);
+				// 	}
+				// if(i >= num_addrs) i = 0; 
+				//th_id = omp_get_thread_num();
+				//printf("#thread id = %d\n", th_id);
+				//num_threads = omp_get_num_threads();
+				//printf("%d\n", num_threads);
+				//printf("%d\n", j);
+			}
+		} 
+	}
+	
 	exec_time_omp  = omp_get_wtime() - exec_time_omp;
 	// printf("Time measured with omp = %f\n", exec_time_omp);
 

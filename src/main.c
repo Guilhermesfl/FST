@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 		exec_time += forward(addrs,head_node,stride_size,num_addrs,num_addrs_for,thread_count, num_exec);
 	}
 	exec_time = exec_time/num_exec;
-	printf("%d %f %f\n", thread_count,exec_time, num_addrs/exec_time);
+	printf("%d %f %f\n", thread_count,exec_time, (num_addrs * num_addrs_for)/exec_time);
 	//printf("Execute time = %f\n", exec_time);
 	//printf("Number of unique addrs forwarded  = %d\n", num_addrs);
 	//printf("Total number of addrs forwarded  = %d\n", num_addrs_for);
